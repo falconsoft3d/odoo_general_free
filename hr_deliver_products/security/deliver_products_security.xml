@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!--    CATEGORY      -->
+    <record id="deliver_products_category" model="ir.module.category">
+        <field name="name">Entrega Productos</field>
+        <field name="description">Entrega Productos</field>
+        <field name="sequence">90</field>
+    </record>
+
+    <!--    USER       -->
+
+    <record id="group_deliver_products_user" model="res.groups">
+        <field name="name">Usuario</field>
+        <field name="category_id" ref="deliver_products_category"/>
+        <field name="comment">Usuario</field>
+    </record>
+
+    <record id="group_deliver_products_admin" model="res.groups">
+        <field name="name">Administrador</field>
+        <field name="users" eval="[(4, ref('base.user_root'))]"/>
+        <field name="category_id" ref="deliver_products_category"/>
+        <field name="comment">Administrador</field>
+    </record>
+</odoo>

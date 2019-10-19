@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_hr_deliver_products_employee" model="ir.ui.view">
+        <field name="name">view.hr.deliver.products.employee</field>
+        <field name="model">hr.employee</field>
+        <field name="type">form</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            
+            <xpath expr="//button[@name='toggle_active']" position="before">
+                <button class="oe_stat_button" type="object" name="action_view_deliveries" icon="fa-tasks">
+                    <div class="o_stat_info">
+                        <field name="deliveries_count" class="o_stat_value"/>
+                        <span class="o_stat_text">Entregas Actuales</span>
+                    </div>
+                </button>
+
+                <button class="oe_stat_button" type="object" name="action_view_deliver" icon="fa-tasks">
+                    <div class="o_stat_info">
+                        <field name="deliver_count" class="o_stat_value"/>
+                        <span class="o_stat_text">Costo Entregas</span>
+                    </div>
+                </button>
+
+                <button class="oe_stat_button" type="object" name="action_view_retry" icon="fa-tasks">
+                    <div class="o_stat_info">
+                        <field name="retry_count" class="o_stat_value"/>
+                        <span class="o_stat_text">Costo Retiros</span>
+                    </div>
+                </button>
+            </xpath>
+
+            <xpath expr="//sheet" position="before">
+                <header>
+                  <button name="%(action_wizard_deliver_products)d" string="Retiro de Productos" type="action" class="oe_highlight" attrs="{'invisible':[('deliveries_count','=', False)]}"/>   
+              </header>
+            </xpath>
+
+            <xpath expr="//field[@name='address_home_id']" position="attributes">
+                <attribute name="required">1</attribute>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

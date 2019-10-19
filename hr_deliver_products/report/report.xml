@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <report 
+            id="action_deliver_products_saleorder"
+            string="Entregas / Retiros"
+            model="deliver.products" 
+            report_type="qweb-pdf"
+            file="hr_deliver_products.report_deliver_products" 
+            name="hr_deliver_products.report_deliver_products"
+            print_report_name="(object.name)"/>
+    </data>
+</odoo>

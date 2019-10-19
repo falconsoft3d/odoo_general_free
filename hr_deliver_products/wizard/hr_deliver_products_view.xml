@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <record id="view_wizard_deliver_products" model="ir.ui.view">
+            <field name="name">wizard.deliver.products.view</field>
+            <field name="model">wizard.deliver.products</field>
+            <field name="arch" type="xml">
+                <form>
+                	
+                    <group>
+                        <group>
+                            <field name="type" widget="radio"/>
+                        </group>
+                        <group>
+                            <field name="motive_id" options="{'no_quick_create':True,'no_create_edit':True,'no_open':True}" attrs="{'invisible':[('type', '!=', 'retiro')], 'required':[('type', '=', 'retiro')]}"/>
+                            
+                            <field name="employee_id" options="{'no_quick_create':True,'no_create_edit':True,'no_open':True}" attrs="{'invisible':[('type', '=', 'retiro')], 'required':[('type', '!=', 'retiro')]}"/>
+                        </group>
+                        <field name="obs_text" attrs="{'invisible':[('type', '!=', 'retiro')]}" placeholder="Nota aqui..."/>
+                    </group>
+
+                    <notebook colspan="4">
+                        <page string="Lineas">
+                            <group>
+                                <field name="lines_ids" nolabel="1">
+                                    <tree editable="buttom" create="0" delete="0">
+                                        <field name="checked"/>
+                                        <field name="product_id" readonly="1"/>
+                                        <field name="qty" sum="Sum" readonly="1"/>
+                                        <field name="costo" readonly="1"/>
+                                        <field name="subtotal" sum="Sum" readonly="1"/>
+                                    </tree>
+                                </field>
+                            </group>
+                          </page>
+                      </notebook>
+                    
+                    <footer>
+                        <button name="retry_product" string="Retirar productos" type="object" class="btn btn-primary"/>
+                        <button string="Cerrar" class="btn btn-default" special="cancel" />
+                    </footer>
+
+                </form>
+            </field>
+        </record>
+
+        <record id="action_wizard_deliver_products" model="ir.actions.act_window">
+          <field name="name">Retirar Productos</field>
+          <field name="type">ir.actions.act_window</field>
+          <field name="res_model">wizard.deliver.products</field>
+          <field name="view_type">form</field>
+          <field name="view_mode">form</field>
+          <field name="target">new</field>
+        </record>
+
+    </data>
+</odoo>

@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ <odoo>
+    <data>
+    <record id="view_form_deliver_products" model="ir.ui.view">
+         <field name="name">view.form.deliver.products</field>
+         <field name="model">deliver.products</field>
+         <field name="arch" type="xml">
+            <form string="Entrega de Productos" delete="0">
+              <header>
+              	
+                  <button name="exe_solicitado" string="Solicitar" type="object"
+                          confirm="¿Estás seguro que quieres pasar a solicitado?"
+                          class="oe_highlight" states="draft" />
+
+                  <button name="exe_aprobar" string="Aprobar" type="object"
+                          confirm="¿Estás seguro que quieres pasar a Aprobado?"
+                          class="oe_highlight" states="solicitud" />
+
+                  <button name="exe_deliver" string="Entregar" type="object"
+                          confirm="¿Estás seguro que quieres pasar a entregado"
+                          class="oe_highlight" states="aprobado" />
+
+                  <button name="exe_draft" string="Borrador" type="object"
+                          confirm="¿Estás seguro que quieres pasar a Borrador?" states="cancelado" />
+
+                  <button name="exe_return_draft" string="Retornar a Borrador" type="object"
+                          confirm="¿Estás seguro que quieres volver a Borrador?" states="cancel"/>
+
+                  <button name="action_send_email" string="Enviar por correo electrónico" type="object" class="oe_highlight"/>
+
+                  <button name="exe_cancel" string="Cancelar" type="object"
+                          confirm="¿Estás seguro que quieres Cancelar?" states="draft,solicitud,aprobado,done"/>
+
+                  <field name="state" widget="statusbar"/>
+                  
+              </header>
+              <sheet>
+                  <div class="oe_title">
+                           <h1>
+                               <field name="name" readonly="1"/>
+                           </h1>
+                        </div>
+
+                  <group>
+                      <group>
+                          <field name="employee_id" options="{'no_create_edit': True}" required="1"/>
+                          <field name="entry_date" required="1"/>
+                       </group>
+                       <group>
+                           <field name="type" required="1"/>
+                           <field name="user_id"  required="1"/>
+                           <field name="picking_id" readonly="1" states='done'/>
+                       </group>
+
+
+                        </group>
+
+                        <notebook>
+                            <page string="Líneas">
+                                <field name="product_ids">
+                                    <tree editable="bottom"
+                                          colors="red:subtotal&lt;=0;"
+                                          decoration-danger="expired"
+                                          decoration-info="retry == False"
+                                          decoration-muted="retry == True">
+                                        <field name="product_id" options='{"no_create": 1, "no_open": 1}' required="1"/>
+                                        <field name="qty" sum="Sum" required="1"/>
+                                        <field name="expiration_days"/>
+                                        <field name="expiration_date"/>
+                                        <field name="expired"/>
+                                        <field name="note"/>
+                                        <field name="stock_product" string="Stock"/>
+                                        <field name="costo" required="1"/>
+                                        <field name="subtotal"  sum="Sum" required="1"/>
+                                        <field name="retry" invisible="1"/>
+                                    </tree>
+                                </field>
+                            </page>
+
+                            <page string="Notas">
+                                <field name="obs"/>
+                            </page>
+                        </notebook>
+               </sheet>
+               <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="view_tree_deliver_products" model="ir.ui.view">
+         <field name="name">view.tree.deliver.products</field>
+         <field name="model">deliver.products</field>
+         <field name="arch" type="xml">
+             <tree delete="0"
+                   colors="Blue:state=='draft';"
+                   decoration-muted="state=='cancel'" >
+                 <field name="name"/>
+                 <field name="employee_id"/>
+                 <field name="type" required="1"/>
+                 <field name="user_id"/>
+                 <field name="entry_date"/>
+                 <field name="product_ids" widget="many2many_tags"/>
+                 <field name="state"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_search_deliver_products" model="ir.ui.view">
+         <field name="name">view.search.deliver.products</field>
+         <field name="model">deliver.products</field>
+         <field name="arch" type="xml">
+             <search>
+                 <field name="name"/>
+                 <field name="employee_id"/>
+                 <field name="type" required="1"/>
+                 <field name="user_id"/>
+                 <field name="entry_date"/>
+                 <field name="product_ids" widget="many2many_tags"/>
+                 <field name="state"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_deliver_products" model="ir.actions.act_window">
+        <field name="name">Entrega Productos</field>
+        <field name="res_model">deliver.products</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- 1 Menu-->
+    <menuitem id="action_deliver_menu_main"
+              groups="hr_deliver_products.group_deliver_products_user"
+              name="Entrega Productos" sequence="100"  web_icon="hr_deliver_products,static/description/icon.png"/>
+
+    <!-- Menú Secundario: Hereda del menú principal -->
+    <menuitem id="action_deliver_menu" name="Entrega Productos" parent="action_deliver_menu_main" sequence="10"/>
+
+    <menuitem id="Entrega Productos"
+        name="Entrega Productos"
+        parent="action_deliver_menu"
+        sequence="10"
+        action="action_deliver_products" />
+
+
+    <record id="view_tree_product_line_list" model="ir.ui.view">
+         <field name="name">view.tree.deliver.products</field>
+         <field name="model">product.line.list</field>
+         <field name="arch" type="xml">
+             <tree delete="0" create="0" decoration-danger="expired">
+                 <field name="employee_id"/>
+                 <field name="partner_id" string="Cliente"/>
+                 <field name="product_id"/>
+                 <field name="categ_id" string="Categoria"/>
+                 <field name="date"/>
+                 <field name="expiration_days"/>
+                 <field name="expired"/>
+                 <field name="expiration_date"/>
+                 <field name="note"/>
+                 <field name="type"/>
+                 <field name="product_deliver_id"/>
+                 <field name="user_id"/>
+                 <field name="qty" sum="Total"/>
+                 <field name="costo"/>
+                 <field name="subtotal" sum="Total"/>
+                 <field name="retry" invisible="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_search_product_line_list" model="ir.ui.view">
+         <field name="name">view.tree.deliver.products</field>
+         <field name="model">product.line.list</field>
+         <field name="arch" type="xml">
+             <search>
+                 <field name="product_id"/>
+                 <field name="retry"/>
+                 <group expand="0" string="Agrupar por..."> 
+                    <filter string="Producto" name="group_by_product" domain="[]" context="{'group_by':'product_id'}"/>   
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_form_product_line_list" model="ir.ui.view">
+       <field name="name">view.form.product.line.list</field>
+       <field name="model">product.line.list</field>
+       <field name="arch" type="xml">
+          <form string="Entrega de Productos" delete="0" edit="0" create="0">
+              <sheet>
+                  <group>
+                      <group>
+                          <field name="product_id" options="{'no_create_edit': True}" required="1"/>
+                          <field name="qty" required="1"/>
+                          <field name="product_deliver_id" required="1"/>
+                          <field name="employee_id"/>
+                           <field name="partner_id" string="Cliente"/>
+                           <field name="product_id"/>
+                           <field name="categ_id" string="Categoria"/>
+                           <field name="date"/>
+                           <field name="type"/>
+                       </group>
+                       <group>
+                           <field name="user_id"/>
+                           <field name="costo" required="1"/>
+                           <field name="subtotal" readonly="1"/>
+                           <field name="retry" />
+                       </group>
+                    </group>  
+               </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="action_form_deliver_products" model="ir.actions.act_window">
+        <field name="name">Productos</field>
+        <field name="res_model">product.line.list</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="Entrega_Productos_Lineas"
+        name="Entrega Productos Lineas"
+        parent="action_deliver_menu"
+        sequence="11"
+        action="action_form_deliver_products" />
+
+    </data>
+</odoo>

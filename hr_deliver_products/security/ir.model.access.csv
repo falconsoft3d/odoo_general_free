@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_deliver_product_user,deliver.product.user,model_deliver_products,group_deliver_products_user,1,1,1,1
+access_product_line_list_user,product.line.list.user,model_product_line_list,group_deliver_products_user,1,1,1,1
+access_deliver_products_motive_user,deliver_products_motive,model_deliver_products_motive,group_deliver_products_user,1,1,1,1

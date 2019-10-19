@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="report_deliver_products_template">
+        <t t-call="web.external_layout">
+            <div class="page">
+                <div class="oe_structure"/>
+                <div class="text-center">
+                    <h4>
+                        <span t-if="doc.type in ['entrega']">Entrega</span>
+                        <span t-if="doc.type in ['retiro']">Retiro</span>
+                        <span t-if="doc.type in ['translado']">Transferencia</span>
+                    </h4>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-12 text-center">
+                        <span t-field="doc.entry_date"/>
+                    </div>
+                </div>
+                <t t-set="total" t-value="0.0"/>
+                <table class="table table-sm o_main_table mb-5">
+                    <thead>
+                        <tr>
+                            <th class="text-left">Producto</th>
+                            <th class="text-right">Cantidad</th>
+                        </tr>
+                    </thead>
+                    <tbody class="sale_tbody">
+                        <t t-foreach="doc.product_ids" t-as="line">
+                            <t t-if="not line.retry">
+                                <tr>
+                                    <td>
+                                        <span t-field="line.product_id"/>
+                                    </td>
+                                    <td class="text-right">
+                                        <span t-field="line.qty"/>
+                                    </td>
+                                </tr>
+                                <t t-set="total" t-value="total + line.qty"/>
+                            </t>
+                        </t>
+                        <tr class="total">
+                            <td class="text-left"></td>
+                            <td class="text-right">
+                                <strong>
+                                    <span t-esc="total"/>
+                                </strong>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="row mt-5">
+                    <div class="col-6 text-center">
+                        _________________________
+                    </div>
+                    <div class="col-6 text-center">
+                        _________________________
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6 text-center">
+                        Entregado por: <span t-esc="user.name"/>
+                    </div>
+                    <div class="col-6 text-center">
+                        Trabajador: <span t-field="doc.employee_id"/>
+                    </div>
+                </div>
+
+                <div class="oe_structure"/>
+            </div>
+        </t>
+    </template>
+
+    <template id="report_deliver_products">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="hr_deliver_products.report_deliver_products_template"/>
+            </t>
+        </t>
+    </template>
+
+</odoo>
