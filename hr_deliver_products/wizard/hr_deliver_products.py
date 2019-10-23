@@ -51,7 +51,10 @@ class WizardDeliverProducts(models.TransientModel):
         """."""
         moves = []
         for line in product_ids:
-            if not line.product_id.is_activo and line.product_id.type in ['consu', 'product']:
+
+            if not line.product_id.is_activo and line.product_id.type in [
+                    'consu', 'product']:
+
                 moves.append((0, 0, {
                     'product_id': line.product_id.id,
                     'product_uom_qty': line.qty,
@@ -90,40 +93,57 @@ class WizardDeliverProducts(models.TransientModel):
 
             picking.button_validate()
 
+    def validate_lines(self, product_ids):
+        """."""
+        for product in product_ids:
+            if not product.qty_retry and product.qty:
+                message = 'Se debe establecer una cantidad a Retirar/Transferir en el producto {}.'.format(
+                    product.product_id.name),
+                raise UserError(message)
+            if product.qty_retry > product.qty:
+                message = 'La cantidad a Retirar/Transferir no puede '
+                'ser mayor a la catidad actual que es: {}'.format(product.qty),
+                raise UserError(message)
+
     def create_deliver_product(self, type, product_ids):
         """."""
-        prods = [(0, 0,
-                  {'product_id': i.product_id.id, 'qty': i.qty,
-                   'costo': i.costo, 'subtotal': i.subtotal})
-                 for i in product_ids]
-        self.env['deliver.products'].create({
-            'employee_id': self.employee_id.id,
-            'type': type,
-            'product_ids': prods,
-            'obs': self.obs_text,
-            'state': 'done'
-        })
+        self.validate_lines(product_ids)
+        prods = []
+        for product in product_ids:
+            qty = product.qty - product.qty_retry
+            dicc = {'qty': qty}
+
+            if not qty:
+                dicc.update({'retry': True})
+
+            product.write(dicc)
+            prods.append(
+                (0, 0,
+                 {'product_id': product.product_id.id,
+                  'qty': product.qty_retry, 'costo': product.costo,
+                  'subtotal': product.subtotal}))
+
+        if self.type != 'retiro':
+            self.env['deliver.products'].create({
+                'employee_id': self.employee_id.id,
+                'type': type,
+                'product_ids': prods,
+                'obs': self.obs_text,
+                'state': 'done'
+            })
 
     def retry_product(self):
         """."""
-        products = [line.id for line in self.lines_ids if line.checked]
-
-        if not products:
+        product_brw = [line for line in self.lines_ids if line.checked]
+        if not product_brw:
             raise UserError(
                 'Se debe seleccionar algun producto de la lista.')
 
-        product_brw = self.env['product.line.list'].browse(products)
-
         if self.type != 'retiro':
-
             if self.employee_id.id == self._context.get('active_id', False):
                 raise UserError(
                     'No puedes transferir productos al mismo empleado.')
-
-            self.create_deliver_product(self.type, product_brw)
-
         else:
-
             if not self.employee_id.address_home_id:
                 raise UserError('El empleado no tiene asociado un cliente.')
 
@@ -142,7 +162,5 @@ class WizardDeliverProducts(models.TransientModel):
                 ubication_deliver_id,
                 ubication_retry_id)
 
-            self.create_deliver_product(self.type, product_brw)
-
-        product_brw.write({'retry': True})
-        self.lines_ids.write({'checked': False})
+        self.create_deliver_product(self.type, product_brw)
+        self.lines_ids.write({'checked': False, 'qty_retry': 0.0})

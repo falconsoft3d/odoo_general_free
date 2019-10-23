@@ -29,7 +29,7 @@
     'license': 'AGPL-3',
     'category': 'Extra Tools',
     'summary': 'Entrega de Productos a Empleados.',
-    'depends': ['hr_payroll', 'stock'],
+    'depends': ['hr_payroll', 'stock', 'mail', 'contacts'],
     'data': [
         'security/deliver_products_security.xml',
         'security/ir.model.access.csv',

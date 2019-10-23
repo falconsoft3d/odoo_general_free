@@ -2,7 +2,7 @@
 <odoo>
     <data>
         <report 
-            id="action_deliver_products_saleorder"
+            id="action_deliver_products"
             string="Entregas / Retiros"
             model="deliver.products" 
             report_type="qweb-pdf"

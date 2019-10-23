@@ -35,7 +35,7 @@ class DeliverProducts(models.Model):
 
     _name = 'deliver.products'
     _description = 'Deliver Products'
-    _inherit = "mail.thread"
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'id desc'
 
     name = fields.Char(
@@ -43,7 +43,8 @@ class DeliverProducts(models.Model):
         required=True, copy=False, readonly=True, index=True,
         default=lambda self: 'Nuevo')
 
-    entry_date = fields.Date('Fecha', default=fields.Date.today, states=RO_STATES)
+    entry_date = fields.Date(
+        'Fecha', default=fields.Date.today, states=RO_STATES)
 
     user_id = fields.Many2one(
         'res.users', string='Usuario', track_visibility='always', states=RO_STATES,
@@ -62,10 +63,12 @@ class DeliverProducts(models.Model):
         track_visibility='always', default='draft', copy=False)
 
     product_ids = fields.One2many(
-        'product.line.list', 'product_deliver_id', string='Listado Productos', states=RO_STATES)
+        'product.line.list', 'product_deliver_id', string='Listado Productos',
+        states=RO_STATES)
 
     type = fields.Selection(
-        TYPE, string='Tipo', index=True, default='entrega', copy=False, states=RO_STATES)
+        TYPE, string='Tipo', index=True, default='entrega',
+        copy=False, states=RO_STATES)
 
     @api.multi
     def action_send_email(self):
@@ -74,7 +77,7 @@ class DeliverProducts(models.Model):
         ir_model_data = self.env['ir.model.data']
         try:
             template_id = ir_model_data.get_object_reference(
-                'hr_deliver_products', 'email_template_deliver_products2')[1]
+                'hr_deliver_products', 'email_template_deliver_products3')[1]
         except ValueError:
             template_id = False
         try:
@@ -89,8 +92,6 @@ class DeliverProducts(models.Model):
             'default_template_id': template_id,
             'default_composition_mode': 'comment',
             'mark_so_as_sent': True,
-            'custom_layout': "mail.mail_notification_paynow",
-            'proforma': self.env.context.get('proforma', False),
             'force_email': True
         }
         return {
@@ -223,16 +224,19 @@ class ProductLineList(models.Model):
     product_id = fields.Many2one('product.product', string='Producto')
     qty = fields.Float('Cantidad')
     costo = fields.Float('Costo')
-    subtotal = fields.Float('Subtotal')
+    subtotal = fields.Float('Subtotal', compute='_get_subtotal', store=True)
     product_deliver_id = fields.Many2one(
         'deliver.products', string="Entrega",
         ondelete='cascade')
     checked = fields.Boolean('Seleccionar')
     retry = fields.Boolean('Retirado/Transferido')
+    qty_retry = fields.Float('Cantidad Retirar/Transferir', default=0.0)
 
-    expiration_date = fields.Date('Fecha Vencimiento', compute='_compute_giveme_expired')
+    expiration_date = fields.Date(
+        'Fecha Vencimiento', compute='_compute_giveme_expired')
 
-    expiration_days = fields.Integer('Días de Vencimientos', related='product_id.expiration_days')
+    expiration_days = fields.Integer(
+        'Días de Vencimientos', related='product_id.expiration_days')
 
     expired = fields.Boolean('Vencido', compute='_compute_giveme_expired')
 
@@ -244,13 +248,13 @@ class ProductLineList(models.Model):
             if self.type == 'retiro':
                 self.expired = False
             else:
-                self.expiration_date = fields.Date.from_string(self.date) + timedelta(days=self.expiration_days)
+                self.expiration_date = fields.Date.from_string(
+                    self.date) + timedelta(days=self.expiration_days)
                 today = date.today()
                 if today > self.expiration_date:
                     self.expired = True
                 else:
                     self.expired = False
-
 
     employee_id = fields.Many2one(
         'hr.employee', related='product_deliver_id.employee_id', store=True,
@@ -283,7 +287,25 @@ class ProductLineList(models.Model):
         """."""
         self.costo = self.product_id.standard_price
 
-    @api.onchange('qty', 'costo')
-    def onchange_product_cost_id(self):
+    # @api.onchange('qty', 'costo')
+    # def onchange_product_cost_id(self):
+    #    """."""
+    #    self.subtotal = self.qty * self.costo
+
+    # @api.one
+    # @api.depends('qty', 'costo')
+    # def _get_subtotal(self):
+    #    for i in self:
+    #        i.subtotal = i.qty * i.costo
+
+    @api.onchange('qty_retry')
+    def onchange_qty_retry(self):
         """."""
-        self.subtotal = self.qty * self.costo
+        if self.qty_retry > self.qty:
+            warning = {
+                'title': 'Warning!',
+                'message': 'La cantidad a Retirar/Transferir no puede '
+                'ser mayor a la catidad actual que es: {}'.format(self.qty),
+            }
+            self.qty_retry = 0.0
+            return {'warning': warning}

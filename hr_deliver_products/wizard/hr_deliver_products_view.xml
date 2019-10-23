@@ -27,7 +27,8 @@
                                     <tree editable="buttom" create="0" delete="0">
                                         <field name="checked"/>
                                         <field name="product_id" readonly="1"/>
-                                        <field name="qty" sum="Sum" readonly="1"/>
+                                        <field name="qty_retry" attrs="{'readonly':[('checked','=', False)], 'required':[('checked', '=', True)]}"/>
+                                        <field name="qty" sum="Sum" readonly="1" string="Cantidad Productos"/>
                                         <field name="costo" readonly="1"/>
                                         <field name="subtotal" sum="Sum" readonly="1"/>
                                     </tree>
