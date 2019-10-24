@@ -18,7 +18,7 @@ class WizardDeliverProducts(models.TransientModel):
         """."""
         employee_id = self._context.get('active_id', False)
         delivereds = self.env['deliver.products'].search(
-            [('employee_id', '=', employee_id)])
+            [('employee_id', '=', employee_id), ('type', '=', 'entrega')])
         list_ids = [
             line.id for deliver in delivereds
             for line in deliver.product_ids if not line.retry]
@@ -27,6 +27,7 @@ class WizardDeliverProducts(models.TransientModel):
     lines_ids = fields.Many2many(
         'product.line.list', 'many_location_rel',
         'many_id', 'product_line_id', 'Lineas', default=_get_default_ids)
+
     employee_id = fields.Many2one('hr.employee', 'Empleado')
     motive_id = fields.Many2one(
         'deliver.products.motive', 'Motivo')
@@ -57,14 +58,13 @@ class WizardDeliverProducts(models.TransientModel):
 
                 moves.append((0, 0, {
                     'product_id': line.product_id.id,
-                    'product_uom_qty': line.qty,
+                    'product_uom_qty': line.qty_retry,
                     'product_uom': line.product_id.uom_id.id,
                     'name': line.product_id.name,
-                    'quantity_done': line.qty,
+                    'quantity_done': line.qty_retry,
                 }))
 
         if moves:
-
             picking_type = self.env['stock.picking.type'].search(
                 [('code', '=', 'outgoing'),
                  ('default_location_src_id', '=', location_id.id)])
@@ -112,10 +112,8 @@ class WizardDeliverProducts(models.TransientModel):
         for product in product_ids:
             qty = product.qty - product.qty_retry
             dicc = {'qty': qty}
-
             if not qty:
                 dicc.update({'retry': True})
-
             product.write(dicc)
             prods.append(
                 (0, 0,
@@ -123,14 +121,13 @@ class WizardDeliverProducts(models.TransientModel):
                   'qty': product.qty_retry, 'costo': product.costo,
                   'subtotal': product.subtotal}))
 
-        if self.type != 'retiro':
-            self.env['deliver.products'].create({
-                'employee_id': self.employee_id.id,
-                'type': type,
-                'product_ids': prods,
-                'obs': self.obs_text,
-                'state': 'done'
-            })
+        self.env['deliver.products'].create({
+            'employee_id': self.employee_id.id,
+            'type': type,
+            'product_ids': prods,
+            'obs': self.obs_text,
+            'state': 'done'
+        })
 
     def retry_product(self):
         """."""
